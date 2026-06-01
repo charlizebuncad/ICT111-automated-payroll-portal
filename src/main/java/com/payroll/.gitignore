@@ -1,0 +1,16 @@
+# Compile Java class files
+*.class
+
+# Log files
+*.log
+
+# VS Code environment configuration files
+.vscode/
+
+# NetBeans environment configuration files (generated when your team opens it)
+nbproject/
+build/
+dist/
+nbdist/
+nbactions.xml
+private/
