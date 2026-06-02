@@ -62,7 +62,6 @@ public class MainPayrollGUI extends javax.swing.JFrame {
         jPanel1.setLayout(null);
 
         btnGenerateReport.setFont(new java.awt.Font("Leelawadee", 1, 14)); // NOI18N
-        btnGenerateReport.setForeground(new java.awt.Color(102, 102, 102));
         btnGenerateReport.setText("Generate Report");
         btnGenerateReport.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         btnGenerateReport.addActionListener(this::btnGenerateReportActionPerformed);
@@ -70,7 +69,6 @@ public class MainPayrollGUI extends javax.swing.JFrame {
         btnGenerateReport.setBounds(360, 10, 160, 40);
 
         btnRemoveeEmployee.setFont(new java.awt.Font("Leelawadee", 1, 14)); // NOI18N
-        btnRemoveeEmployee.setForeground(new java.awt.Color(102, 102, 102));
         btnRemoveeEmployee.setText("Remove Selected");
         btnRemoveeEmployee.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         btnRemoveeEmployee.addActionListener(this::btnRemoveeEmployeeActionPerformed);
@@ -78,13 +76,14 @@ public class MainPayrollGUI extends javax.swing.JFrame {
         btnRemoveeEmployee.setBounds(190, 10, 160, 40);
 
         btnAddEmployee.setFont(new java.awt.Font("Leelawadee", 1, 14)); // NOI18N
-        btnAddEmployee.setForeground(new java.awt.Color(102, 102, 102));
         btnAddEmployee.setText("+ Add Employee");
         btnAddEmployee.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         btnAddEmployee.addActionListener(this::btnAddEmployeeActionPerformed);
         jPanel1.add(btnAddEmployee);
         btnAddEmployee.setBounds(20, 10, 160, 40);
 
+        jTable2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jTable2.setForeground(new java.awt.Color(153, 255, 0));
         jTable2.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
