@@ -17,6 +17,9 @@ public class PayrollGUI extends JFrame {
     private DefaultTableModel tableModel;
     private JTable employeeTable;
 
+    // ── Table sorter (needed for search filter) ────────────────────────────
+    private TableRowSorter<DefaultTableModel> rowSorter;
+
     // ── Footer ──────────────────────────────────────────────────────────────
     private JLabel totalPayoutLabel;
     private JLabel employeeCountLabel;
@@ -27,6 +30,7 @@ public class PayrollGUI extends JFrame {
     private static final Color C_GREEN       = new Color(40,  167, 69);
     private static final Color C_RED         = new Color(220, 53,  69);
     private static final Color C_BLUE        = new Color(0,   123, 255);
+    private static final Color C_ORANGE      = new Color(255, 140, 0);
     private static final Color C_ROW_ALT     = new Color(240, 248, 255);
 
     private static final String[] COLUMNS =
@@ -140,10 +144,13 @@ public class PayrollGUI extends JFrame {
         bar.setBackground(new Color(245, 245, 245));
 
         JButton addBtn    = styledBtn("+ Add Employee",   C_GREEN,    e -> showAddDialog());
+        JButton editBtn   = styledBtn("Edit Selected",    C_ORANGE,   e -> showEditDialog());
         JButton removeBtn = styledBtn("Remove Selected",  C_RED,      e -> removeSelected());
         JButton reportBtn = styledBtn("Generate Report",  C_BLUE,     e -> showReport());
 
         bar.add(addBtn);
+        bar.addSeparator(new Dimension(10, 0));
+        bar.add(editBtn);
         bar.addSeparator(new Dimension(10, 0));
         bar.add(removeBtn);
         bar.addSeparator(new Dimension(10, 0));
@@ -194,6 +201,9 @@ public class PayrollGUI extends JFrame {
         for (int i = 0; i < widths.length; i++) {
             employeeTable.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
         }
+
+        rowSorter = new TableRowSorter<>(tableModel);
+        employeeTable.setRowSorter(rowSorter);
 
         JScrollPane sp = new JScrollPane(employeeTable);
         sp.setBorder(new EmptyBorder(0, 10, 0, 10));
@@ -275,8 +285,9 @@ public class PayrollGUI extends JFrame {
             warn("Please select an employee to remove.", "No Selection");
             return;
         }
-        String id   = (String) tableModel.getValueAt(row, 0);
-        String name = (String) tableModel.getValueAt(row, 1);
+        int modelRow = employeeTable.convertRowIndexToModel(row);
+        String id   = (String) tableModel.getValueAt(modelRow, 0);
+        String name = (String) tableModel.getValueAt(modelRow, 1);
         int ok = JOptionPane.showConfirmDialog(this,
                 "Remove " + name + " (" + id + ")?",
                 "Confirm Remove", JOptionPane.YES_NO_OPTION,
@@ -285,6 +296,158 @@ public class PayrollGUI extends JFrame {
             workforce.removeIf(e -> e.getEmployeeId().equals(id));
             refreshTable();
         }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  Edit Employee Dialog
+    // ════════════════════════════════════════════════════════════════════════
+    private void showEditDialog() {
+        int row = employeeTable.getSelectedRow();
+        if (row == -1) {
+            warn("Please select an employee to edit.", "No Selection");
+            return;
+        }
+        int modelRow = employeeTable.convertRowIndexToModel(row);
+        Employee emp = workforce.get(modelRow);
+
+        JDialog dlg = new JDialog(this, "Edit Employee", true);
+        dlg.setSize(460, 500);
+        dlg.setLocationRelativeTo(this);
+        dlg.setLayout(new BorderLayout());
+        dlg.setResizable(false);
+
+        // Dialog header
+        JPanel dh = new JPanel();
+        dh.setBackground(C_ORANGE);
+        dh.setBorder(new EmptyBorder(12, 16, 12, 16));
+        JLabel dht = new JLabel("Edit Employee");
+        dht.setFont(new Font("SansSerif", Font.BOLD, 16));
+        dht.setForeground(Color.WHITE);
+        dh.add(dht);
+        dlg.add(dh, BorderLayout.NORTH);
+
+        // Common fields (ID and type are locked)
+        final int typeIdx = emp instanceof FTEmployee ? 0
+                          : emp instanceof HourlyContractor ? 1 : 2;
+        String[] typeOptions = {"Full-Time Employee", "Hourly Contractor", "Commission Salesperson"};
+        JComboBox<String> typeCombo = new JComboBox<>(typeOptions);
+        typeCombo.setSelectedIndex(typeIdx);
+        typeCombo.setEnabled(false);
+
+        JTextField idField   = new JTextField(emp.getEmployeeId());
+        idField.setEnabled(false);
+        idField.setBackground(new Color(230, 230, 230));
+        JTextField nameField = new JTextField(emp.getName());
+        JTextField bankField = new JTextField(emp.getBankAccount());
+
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBorder(new EmptyBorder(16, 20, 0, 20));
+        GridBagConstraints g = new GridBagConstraints();
+        g.fill = GridBagConstraints.HORIZONTAL;
+        g.insets = new Insets(5, 5, 5, 5);
+        g.weightx = 1.0;
+
+        addRow(form, g, 0, "Employee Type:", typeCombo);
+        addRow(form, g, 1, "Employee ID:",   idField);
+        addRow(form, g, 2, "Full Name:",     nameField);
+        addRow(form, g, 3, "Bank Account:",  bankField);
+
+        // Pay-detail fields pre-filled for the employee type
+        JPanel payPanel = new JPanel(new GridBagLayout());
+        payPanel.setBorder(new TitledBorder(
+                new LineBorder(C_DARK_BLUE), "Pay Details",
+                TitledBorder.LEFT, TitledBorder.TOP,
+                new Font("SansSerif", Font.BOLD, 12), C_DARK_BLUE));
+
+        JLabel l1 = new JLabel(), l2 = new JLabel(), l3 = new JLabel();
+        JTextField f1 = new JTextField(), f2 = new JTextField(), f3 = new JTextField();
+
+        GridBagConstraints pg = new GridBagConstraints();
+        pg.fill = GridBagConstraints.HORIZONTAL;
+        pg.insets = new Insets(5, 5, 5, 5);
+        pg.weightx = 1.0;
+        addRow(payPanel, pg, 0, l1, f1);
+        addRow(payPanel, pg, 1, l2, f2);
+        addRow(payPanel, pg, 2, l3, f3);
+
+        if (emp instanceof FTEmployee) {
+            FTEmployee ft = (FTEmployee) emp;
+            l1.setText("Monthly Salary ($):");          f1.setText(String.valueOf(ft.getMonthlySalary()));
+            l2.setText("Health Benefits Premium ($):"); f2.setText(String.valueOf(ft.getHealthBenefitsPremium()));
+            l3.setVisible(false); f3.setVisible(false);
+        } else if (emp instanceof HourlyContractor) {
+            HourlyContractor hc = (HourlyContractor) emp;
+            l1.setText("Hourly Rate ($):"); f1.setText(String.valueOf(hc.getHourlyRate()));
+            l2.setText("Hours Worked:");    f2.setText(String.valueOf(hc.getHoursWorked()));
+            l3.setVisible(false); f3.setVisible(false);
+        } else {
+            CommdSalesperson cs = (CommdSalesperson) emp;
+            l1.setText("Base Pay ($):");                     f1.setText(String.valueOf(cs.getBasePay()));
+            l2.setText("Total Sales ($):");                  f2.setText(String.valueOf(cs.getTotalSales()));
+            l3.setText("Commission Rate (0.00 \u2013 1.00):"); f3.setText(String.valueOf(cs.getCommissionRate()));
+        }
+
+        g.gridx = 0; g.gridy = 4; g.gridwidth = 2;
+        g.insets = new Insets(12, 5, 5, 5);
+        form.add(payPanel, g);
+        dlg.add(form, BorderLayout.CENTER);
+
+        // Buttons
+        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 12));
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setFocusPainted(false);
+        cancelBtn.addActionListener(e -> dlg.dispose());
+
+        JButton saveBtn = styledBtn("Save Changes", C_ORANGE, e -> {
+            try {
+                String nm   = nameField.getText().trim();
+                String bank = bankField.getText().trim();
+                if (nm.isEmpty() || bank.isEmpty()) {
+                    error(dlg, "Please fill in all common fields.", "Validation Error");
+                    return;
+                }
+                if (f1.getText().trim().isEmpty() || f2.getText().trim().isEmpty()) {
+                    error(dlg, "Please fill in all pay detail fields.", "Validation Error");
+                    return;
+                }
+                if (typeIdx == 2 && f3.getText().trim().isEmpty()) {
+                    error(dlg, "Please fill in all pay detail fields.", "Validation Error");
+                    return;
+                }
+
+                String id = emp.getEmployeeId();
+                Employee updated;
+                if (typeIdx == 0) {
+                    updated = new FTEmployee(id, nm, bank,
+                            Double.parseDouble(f1.getText().trim()),
+                            Double.parseDouble(f2.getText().trim()));
+                } else if (typeIdx == 1) {
+                    updated = new HourlyContractor(id, nm, bank,
+                            Double.parseDouble(f1.getText().trim()),
+                            Double.parseDouble(f2.getText().trim()));
+                } else {
+                    updated = new CommdSalesperson(id, nm, bank,
+                            Double.parseDouble(f1.getText().trim()),
+                            Double.parseDouble(f2.getText().trim()),
+                            Double.parseDouble(f3.getText().trim()));
+                }
+
+                workforce.set(modelRow, updated);
+                refreshTable();
+                dlg.dispose();
+                info("Employee updated successfully!", "Success");
+
+            } catch (NumberFormatException ex) {
+                error(dlg, "Please enter valid numeric values for pay fields.", "Input Error");
+            } catch (IllegalArgumentException ex) {
+                error(dlg, ex.getMessage(), "Validation Error");
+            }
+        });
+
+        btnRow.add(cancelBtn);
+        btnRow.add(saveBtn);
+        dlg.add(btnRow, BorderLayout.SOUTH);
+        dlg.setVisible(true);
     }
 
     // ════════════════════════════════════════════════════════════════════════
