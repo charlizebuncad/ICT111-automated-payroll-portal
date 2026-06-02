@@ -11,12 +11,14 @@ package com.payroll.gui;
 public class MainPayrollGUI extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(MainPayrollGUI.class.getName());
+    private javax.swing.table.TableRowSorter<javax.swing.table.DefaultTableModel> rowSorter;
 
     /**
      * Creates new form MainPayrollGUI
      */
     public MainPayrollGUI() {
         initComponents();
+        initSearchAndEdit();
     }
 
     /**
@@ -32,7 +34,7 @@ public class MainPayrollGUI extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
-        btnGenerateReport = new javax.swing.JButton();
+        btnEditSelected = new javax.swing.JButton();
         btnRemoveeEmployee = new javax.swing.JButton();
         btnAddEmployee = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -41,6 +43,10 @@ public class MainPayrollGUI extends javax.swing.JFrame {
         jPanel3 = new javax.swing.JPanel();
         jLabel6 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
+        btnGenerateReport1 = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
+        jTextField1 = new javax.swing.JTextField();
+        jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -61,12 +67,12 @@ public class MainPayrollGUI extends javax.swing.JFrame {
 
         jPanel1.setLayout(null);
 
-        btnGenerateReport.setFont(new java.awt.Font("Leelawadee", 1, 14)); // NOI18N
-        btnGenerateReport.setText("Generate Report");
-        btnGenerateReport.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        btnGenerateReport.addActionListener(this::btnGenerateReportActionPerformed);
-        jPanel1.add(btnGenerateReport);
-        btnGenerateReport.setBounds(360, 10, 160, 40);
+        btnEditSelected.setFont(new java.awt.Font("Leelawadee", 1, 14)); // NOI18N
+        btnEditSelected.setText("Edit Selected");
+        btnEditSelected.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        btnEditSelected.addActionListener(this::btnEditSelectedActionPerformed);
+        jPanel1.add(btnEditSelected);
+        btnEditSelected.setBounds(360, 10, 160, 40);
 
         btnRemoveeEmployee.setFont(new java.awt.Font("Leelawadee", 1, 14)); // NOI18N
         btnRemoveeEmployee.setText("Remove Selected");
@@ -97,7 +103,7 @@ public class MainPayrollGUI extends javax.swing.JFrame {
         jScrollPane1.setViewportView(jScrollPane2);
 
         jPanel1.add(jScrollPane1);
-        jScrollPane1.setBounds(0, 60, 660, 180);
+        jScrollPane1.setBounds(20, 100, 660, 180);
 
         jPanel3.setBackground(new java.awt.Color(0, 51, 102));
         jPanel3.setLayout(null);
@@ -113,18 +119,37 @@ public class MainPayrollGUI extends javax.swing.JFrame {
         jLabel7.setForeground(new java.awt.Color(255, 255, 255));
         jLabel7.setText("Total Company Payout:");
         jPanel3.add(jLabel7);
-        jLabel7.setBounds(410, 0, 250, 40);
+        jLabel7.setBounds(410, 0, 270, 40);
 
         jPanel1.add(jPanel3);
         jPanel3.setBounds(0, 320, 660, 40);
+
+        btnGenerateReport1.setFont(new java.awt.Font("Leelawadee", 1, 14)); // NOI18N
+        btnGenerateReport1.setText("Generate Report");
+        btnGenerateReport1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        btnGenerateReport1.addActionListener(this::btnGenerateReport1ActionPerformed);
+        jPanel1.add(btnGenerateReport1);
+        btnGenerateReport1.setBounds(530, 10, 160, 40);
+
+        jLabel1.setText("🔍 Search:");
+        jPanel1.add(jLabel1);
+        jLabel1.setBounds(30, 70, 70, 16);
+
+        jTextField1.addActionListener(this::jTextField1ActionPerformed);
+        jPanel1.add(jTextField1);
+        jTextField1.setBounds(90, 70, 490, 22);
+
+        jButton1.setText("Clear");
+        jPanel1.add(jButton1);
+        jButton1.setBounds(600, 70, 72, 23);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 660, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 690, Short.MAX_VALUE)
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 660, Short.MAX_VALUE))
+                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 690, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -140,55 +165,59 @@ public class MainPayrollGUI extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnGenerateReportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerateReportActionPerformed
-        // TODO add your handling code here:
-        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTable2.getModel();
-    
-    // Check if there is even any data to print
-        if (model.getRowCount() == 0) {
-            javax.swing.JOptionPane.showMessageDialog(this, "No employee data available to generate a report.");
+    private void btnEditSelectedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditSelectedActionPerformed
+        int selectedRow = jTable2.getSelectedRow();
+        if (selectedRow == -1) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Please select an employee row to edit.");
             return;
         }
-    
-    // 1. Build the String content using StringBuilder
-        StringBuilder report = new StringBuilder();
-        report.append("===== PAYROLL REPORT =====\n\n");
-    
-        double totalPayout = 0.0;
-    
-    // Loop through each row in the JTable matrix
-        for (int i = 0; i < model.getRowCount(); i++) {
-            String id = model.getValueAt(i, 0).toString();
-            String name = model.getValueAt(i, 1).toString();
-            String bank = model.getValueAt(i, 2).toString();
-            String type = model.getValueAt(i, 3).toString();
-            String netPayStr = model.getValueAt(i, 4).toString();
-        
-        // Accumulate totals (strip out $ symbol for math calculation)
-            double netPayVal = Double.parseDouble(netPayStr.replace("$", "").trim());
-            totalPayout += netPayVal;
-        
-        // Format each block to look exactly like your screenshot reference
-            report.append(String.format("Employee ID    : %s\n", id));
-            report.append(String.format("Name           : %s\n", name));
-            report.append(String.format("Bank Account   : %s\n", bank));
-            report.append(String.format("Type           : %s\n", type));
-            report.append(String.format("Net Pay        : %s\n", netPayStr));
-            report.append("-------------------------------------------\n");
+
+        int modelRow = jTable2.convertRowIndexToModel(selectedRow);
+        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTable2.getModel();
+
+        String id   = model.getValueAt(modelRow, 0).toString();
+        String name = model.getValueAt(modelRow, 1).toString();
+        String bank = model.getValueAt(modelRow, 2).toString();
+        String type = model.getValueAt(modelRow, 3).toString();
+
+        AddEmployeeDialog editForm = new AddEmployeeDialog(this, true);
+        editForm.setEmpID(id);
+        editForm.setEmpType(type);
+        editForm.setEmpName(name);
+        editForm.setBankAccount(bank);
+        editForm.setLocationRelativeTo(this);
+        editForm.setVisible(true);
+
+        if (editForm.isSaved) {
+            String newName = editForm.getEmpName();
+            String newBank = editForm.getBankAccount();
+            String newType = editForm.getEmpType();
+
+            double monthlySalary = 0.0;
+            double healthPremium = 0.0;
+            try {
+                if (!editForm.getSalary().isEmpty()) {
+                    monthlySalary = Double.parseDouble(editForm.getSalary());
+                }
+                if (!editForm.getPremium().isEmpty()) {
+                    healthPremium = Double.parseDouble(editForm.getPremium());
+                }
+            } catch (NumberFormatException e) {
+                javax.swing.JOptionPane.showMessageDialog(this, "Please enter valid numbers for Salary and Premiums.");
+                return;
+            }
+
+            double netSalary = monthlySalary - healthPremium;
+            String formattedNetPay = "$" + String.format("%.2f", netSalary);
+
+            model.setValueAt(newName,         modelRow, 1);
+            model.setValueAt(newBank,         modelRow, 2);
+            model.setValueAt(newType,         modelRow, 3);
+            model.setValueAt(formattedNetPay, modelRow, 4);
+
+            updateTotalPayout();
         }
-    
-    // Append the footer summarization blocks
-        report.append("\n");
-        report.append(String.format("Total Employees : %d\n", model.getRowCount()));
-        report.append(String.format("Total Payout    : $%s\n", String.format("%.2f", totalPayout)));
-    
-    // 2. Launch your brand new Report Window Dialog box
-        PayrollReportDialog reportForm = new PayrollReportDialog(this, true);
-        reportForm.setReportText(report.toString()); // Inject the generated text block
-        reportForm.setLocationRelativeTo(this);      // Center on screen
-        reportForm.setVisible(true);
-        
-    }//GEN-LAST:event_btnGenerateReportActionPerformed
+    }//GEN-LAST:event_btnEditSelectedActionPerformed
 
     private void btnRemoveeEmployeeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveeEmployeeActionPerformed
         // TODO add your handling code here:
@@ -257,6 +286,41 @@ public class MainPayrollGUI extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnAddEmployeeActionPerformed
 
+    private void btnGenerateReport1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerateReport1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnGenerateReport1ActionPerformed
+
+    private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
+        // filtering is handled by the DocumentListener in initSearchAndEdit()
+    }//GEN-LAST:event_jTextField1ActionPerformed
+
+    private void initSearchAndEdit() {
+        // Wire TableRowSorter for real-time filtering
+        rowSorter = new javax.swing.table.TableRowSorter<>(
+                (javax.swing.table.DefaultTableModel) jTable2.getModel());
+        jTable2.setRowSorter(rowSorter);
+
+        // DocumentListener on jTextField1 — filters on every keystroke
+        jTextField1.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e)  { applyFilter(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e)  { applyFilter(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
+
+            private void applyFilter() {
+                String text = jTextField1.getText().trim();
+                if (text.isEmpty()) {
+                    rowSorter.setRowFilter(null);
+                } else {
+                    rowSorter.setRowFilter(javax.swing.RowFilter.regexFilter(
+                            "(?i)" + java.util.regex.Pattern.quote(text), 0, 1, 3));
+                }
+            }
+        });
+
+        // Wire Clear button (jButton1)
+        jButton1.addActionListener(e -> jTextField1.setText(""));
+    }
+
     /**
      * @param args the command line arguments
      */
@@ -303,8 +367,11 @@ public class MainPayrollGUI extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAddEmployee;
-    private javax.swing.JButton btnGenerateReport;
+    private javax.swing.JButton btnEditSelected;
+    private javax.swing.JButton btnGenerateReport1;
     private javax.swing.JButton btnRemoveeEmployee;
+    private javax.swing.JButton jButton1;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel6;
@@ -315,5 +382,6 @@ public class MainPayrollGUI extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTable jTable2;
+    private javax.swing.JTextField jTextField1;
     // End of variables declaration//GEN-END:variables
 }

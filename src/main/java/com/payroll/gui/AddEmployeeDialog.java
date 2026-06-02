@@ -242,6 +242,33 @@ public class AddEmployeeDialog extends javax.swing.JDialog {
         return jID.getText().trim(); 
     }
 
+    // ── Setters for edit mode pre-fill ──────────────────────────────────────
+    public void setEmpID(String id) {
+        jID.setText(id);
+        jID.setEnabled(false);
+    }
+
+    public void setEmpType(String type) {
+        jComboBox1.setSelectedItem(type);
+        jComboBox1.setEnabled(false);
+    }
+
+    public void setEmpName(String name) {
+        jName.setText(name);
+    }
+
+    public void setBankAccount(String bank) {
+        jBankAcc.setText(bank);
+    }
+
+    public void setSalary(String salary) {
+        jSalary.setText(salary);
+    }
+
+    public void setPremium(String premium) {
+        jHBP.setText(premium);
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAddEmployee1;
     private javax.swing.JButton btnCancel;
