@@ -433,13 +433,16 @@ public class PayrollGUI extends JFrame {
             sb.append(String.format("%-16s: %s%n",  "Bank Account", emp.getBankAccount()));
             sb.append(String.format("%-16s: %s%n",  "Type",         typeLabel(emp)));
 
-            if (emp instanceof FTEmployee ft) {
+            if (emp instanceof FTEmployee) {
+                FTEmployee ft = (FTEmployee) emp;
                 sb.append(String.format("%-16s: $%.2f%n", "Monthly Salary",   ft.getMonthlySalary()));
                 sb.append(String.format("%-16s: $%.2f%n", "Health Premium",   ft.getHealthBenefitsPremium()));
-            } else if (emp instanceof HourlyContractor hc) {
+            } else if (emp instanceof HourlyContractor) {
+                HourlyContractor hc = (HourlyContractor) emp;
                 sb.append(String.format("%-16s: $%.2f%n", "Hourly Rate",  hc.getHourlyRate()));
                 sb.append(String.format("%-16s: %.1f hrs%n", "Hours Worked", hc.getHoursWorked()));
-            } else if (emp instanceof CommdSalesperson cs) {
+            } else if (emp instanceof CommdSalesperson) {
+                CommdSalesperson cs = (CommdSalesperson) emp;
                 sb.append(String.format("%-16s: $%.2f%n",  "Base Pay",       cs.getBasePay()));
                 sb.append(String.format("%-16s: $%.2f%n",  "Total Sales",    cs.getTotalSales()));
                 sb.append(String.format("%-16s: %.0f%%%n", "Commission Rate", cs.getCommissionRate() * 100));
